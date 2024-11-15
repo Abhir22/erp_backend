@@ -1,0 +1,4 @@
+.env
+package-lock*
+dist/*
+node_modules/*
