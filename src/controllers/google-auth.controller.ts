@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import passport from "../services/google-auth.service";
 import { Profile } from "passport-google-oauth20";
 import { findAndUpdateuser } from "../databases/mongo/method";
+import { signJwt } from "../utils/jwt.utils";
 
 export class GoogleAuth {
   googleLogin(req: Request, res: Response) {
@@ -40,7 +41,22 @@ export class GoogleAuth {
         },
         "user"
       );
+    
       if (result) {
+        const access_jwt_token = signJwt(
+          { ...result },
+          { expiresIn: 15 }
+        );
+  
+        //set cookies
+        res.cookie("accessToken", access_jwt_token, {
+          maxAge: 90000,
+          httpOnly: true,
+          domain: "localhost",
+          path: "/",
+          sameSite: "lax",
+          secure: false,
+        });
         res.send(`Welcome ${googleUser.displayName} Your email is ${email}`);
       } else {
         res.status(500).send("Error saving pr updating user.");
