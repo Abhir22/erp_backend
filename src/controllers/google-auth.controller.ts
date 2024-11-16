@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import passport from "../services/google-auth.service";
 import { Profile } from "passport-google-oauth20";
-import { findAndUpdateuser } from "../databases/mongo/method";
+import { findAndUpdateOrCreateUser } from "../databases/mongo/method";
 import { signJwt } from "../utils/jwt.utils";
 
 export class GoogleAuth {
@@ -29,7 +29,7 @@ export class GoogleAuth {
         return res.status(400).send("User not authenticated");
       }
       const email = googleUser.emails?.[0]?.value || "No email available";
-      const result = await findAndUpdateuser(
+      const result = await findAndUpdateOrCreateUser(
         { user_email: email }, 
         {
           user_type: "Google",
@@ -72,6 +72,13 @@ export class GoogleAuth {
       if (err) {
         return res.status(500).send("Error logging out");
       }
+      res.clearCookie("accessToken", {
+        domain: "localhost",
+        path: "/",
+        sameSite: "lax",
+        secure: false,
+      });
+  
       res.redirect("/api/auth");
     });
   }
